@@ -18,12 +18,12 @@ trusted-host = mirrors.aliyun.com' > /etc/pip.conf && \
     ln -s /usr/local/nginx/sbin/nginx /usr/local/nginx/sbin/tengine && \
     ln -s /usr/local/nginx/sbin/nginx /usr/local/bin/tengine && \
     ln -s /usr/local/nginx /etc/nginx && \
-    echo $'
-[program:tengine_proxy]
-command=/usr/local/bin/tengine
+    echo $'\n\
+[program:tengine_proxy]\n\
+command=/usr/local/bin/tengine\n\
 ' >> /etc/supervisord.conf && \
     pip install --no-cache-dir mysqlclient uWSGI==$UWSGI_VERSION && \
-    apk del mariadb-dev openssl-dev pcre-dev g++ make \
+    apk del mariadb-dev openssl-dev pcre-dev libc-dev g++ gcc make \
     libc-dev linux-headers && \
     apk add --no-cache mariadb-client-libs && \
     supervisord && supervisorctl start tengine_proxy
