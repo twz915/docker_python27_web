@@ -1,16 +1,13 @@
 FROM python:3.6-alpine
 MAINTAINER WeizhongTu <tuweizhong@163.com>
 
-ENV LUAJIT_LIB /usr/local/lib/luajit
-ENV LUAJIT_INC /usr/local/include/luajit-2.0
-ENV TENGINE_PREFIX /usr/local/tengine
-
 RUN echo $'[global]\n\
 timeout = 60\n\
 index-url = http://mirrors.aliyun.com/pypi/simple\n\
 [install]\n\
 trusted-host = mirrors.aliyun.com' > /etc/pip.conf && \
-    apk add --no-cache mariadb-dev openssl-dev pcre pcre-dev libc-dev \
+    sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \
+    apk add --no-cache libxml2-dev libxslt-dev mariadb-dev openssl-dev pcre pcre-dev libc-dev \
     libuuid mailcap linux-headers gcc g++ make \
     supervisor curl && \
     curl http://tengine.taobao.org/download/tengine-2.2.2.tar.gz -o /tmp/tengine.tar.gz && \
@@ -23,19 +20,23 @@ trusted-host = mirrors.aliyun.com' > /etc/pip.conf && \
     tar -xvzf /tmp/ngx_devel_kit-0.3.0.tar.gz -C /tmp && \
     cd /tmp/LuaJIT-2.0.5 && make -j2 && make install && \
     cd /tmp/tengine-2.2.2 && \
+    export LUAJIT_LIB=/usr/local/lib/luajit && \
+    export LUAJIT_INC=/usr/local/include/luajit-2.0 && \
+    export TENGINE_PREFIX=/usr/local/tengine && \
     ./configure --prefix=$TENGINE_PREFIX --add-module=/tmp/lua-nginx-module-0.10.11 --add-module=/tmp/ngx_devel_kit-0.3.0 && \
     make -j2 && make install &&\
     ln -s $TENGINE_PREFIX/sbin/nginx $TENGINE_PREFIX/sbin/tengine && \
     ln -s $TENGINE_PREFIX/sbin/nginx /usr/local/bin/tengine && \
     ln -s $TENGINE_PREFIX /etc/nginx && \
+    mkdir -p /etc/supervisor.d/ && \
     echo $'\n\
-[program:tengine_proxy]\n\
+[program:tengine]\n\
 command=/usr/local/bin/tengine\n\
-' >> /etc/supervisord.conf && \
-    pip install --no-cache-dir mysqlclient uWSGI==2.0.17 && \
+' >> /etc/supervisor.d/tengine.ini && \
+    pip install --no-cache-dir mysqlclient lxml uWSGI==2.0.17 && \
     cd / && rm -rf /tmp/* && \
-    apk add --no-cache mariadb-client-libs && \
-    supervisord && supervisorctl start tengine_proxy
+    apk add --no-cache mariadb-client-libs
 
-EXPOSE 80 443
+
+EXPOSE 80
 CMD ["sh"]
