@@ -7,14 +7,15 @@ index-url = http://mirrors.aliyun.com/pypi/simple\n\
 [install]\n\
 trusted-host = mirrors.aliyun.com' > /etc/pip.conf && \
     sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \
-    apk add --no-cache libxml2-dev libxslt-dev mariadb-dev openssl-dev pcre pcre-dev libc-dev \
+    apk add --no-cache libxml2-dev libxslt-dev mariadb-client-libs mariadb-dev \
+    openssl-dev pcre pcre-dev libc-dev \
     libuuid mailcap linux-headers gcc g++ make \
     supervisor curl && \
-    curl http://tengine.taobao.org/download/tengine-2.2.2.tar.gz -o /tmp/tengine.tar.gz && \
+    curl http://tengine.taobao.org/download/tengine-2.2.2.tar.gz -o /tmp/tengine-2.2.2.tar.gz && \
     curl http://luajit.org/download/LuaJIT-2.0.5.tar.gz -o /tmp/LuaJIT-2.0.5.tar.gz && \
     curl https://codeload.github.com/openresty/lua-nginx-module/tar.gz/v0.10.11 -o /tmp/lua-nginx-module-0.10.11.tar.gz && \
     curl https://codeload.github.com/simpl/ngx_devel_kit/tar.gz/v0.3.0 -o /tmp/ngx_devel_kit-0.3.0.tar.gz && \
-    tar -xvzf /tmp/tengine.tar.gz -C /tmp && \
+    tar -xvzf /tmp/tengine-2.2.2.tar.gz -C /tmp && \
     tar -xvzf /tmp/LuaJIT-2.0.5.tar.gz -C /tmp && \
     tar -xvzf /tmp/lua-nginx-module-0.10.11.tar.gz -C /tmp && \
     tar -xvzf /tmp/ngx_devel_kit-0.3.0.tar.gz -C /tmp && \
@@ -33,9 +34,10 @@ trusted-host = mirrors.aliyun.com' > /etc/pip.conf && \
 [program:tengine]\n\
 command=/usr/local/bin/tengine\n\
 ' >> /etc/supervisor.d/tengine.ini && \
-    pip install --no-cache-dir mysqlclient lxml uWSGI==2.0.17 && \
-    cd / && rm -rf /tmp/* && \
-    apk add --no-cache mariadb-client-libs && \
+    pip install --no-cache-dir -I mysqlclient lxml uWSGI==2.0.17 && \
+    apk del mariadb-dev openssl-dev pcre-dev libxml2-dev libxslt-dev linux-headers gcc g++ make && \
+    apk add --no-cache libxml2 openssl mariadb-client-libs libgcc pcre && \
+    cd / && rm -rf /tmp/*
 
 
 EXPOSE 80
