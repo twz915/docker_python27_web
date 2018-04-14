@@ -1,9 +1,6 @@
 FROM python:alpine
 MAINTAINER WeizhongTu <tuweizhong@163.com>
 
-ENV LUAJIT_LIB /usr/local/lib/luajit
-ENV LUAJIT_INC /usr/local/include/luajit-2.0
-
 RUN echo $'[global]\n\
 timeout = 60\n\
 index-url = http://mirrors.aliyun.com/pypi/simple\n\
@@ -22,11 +19,14 @@ trusted-host = mirrors.aliyun.com' > /etc/pip.conf && \
     tar -xvzf /tmp/ngx_devel_kit-0.3.0.tar.gz -C /tmp && \
     cd /tmp/LuaJIT-2.0.5 && make -j2 && make install && \
     cd /tmp/tengine-2.2.2 && \
-    ./configure --prefix=/usr/local/tengine --add-module=/tmp/lua-nginx-module-0.10.11 --add-module=/tmp/ngx_devel_kit-0.3.0 && \
+    export LUAJIT_LIB=/usr/local/lib/luajit && \
+    export LUAJIT_INC=/usr/local/include/luajit-2.0 && \
+    export TENGINE_PREFIX=/usr/local/tengine && \
+    ./configure --prefix=$TENGINE_PREFIX --add-module=/tmp/lua-nginx-module-0.10.11 --add-module=/tmp/ngx_devel_kit-0.3.0 && \
     make -j2 && make install &&\
-    ln -s /usr/local/nginx/sbin/nginx /usr/local/nginx/sbin/tengine && \
-    ln -s /usr/local/nginx/sbin/nginx /usr/local/bin/tengine && \
-    ln -s /usr/local/nginx /etc/nginx && \
+    ln -s $TENGINE_PREFIX/sbin/nginx $TENGINE_PREFIX/sbin/tengine && \
+    ln -s $TENGINE_PREFIX/sbin/nginx /usr/local/bin/tengine && \
+    ln -s $TENGINE_PREFIX /etc/nginx && \
     echo $'\n\
 [program:tengine_proxy]\n\
 command=/usr/local/bin/tengine\n\
